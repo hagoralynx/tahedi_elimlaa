@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تحدي الإملاء</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top,#2b174d 0,#160d26 48%,#090510 100%);color:#fff;min-height:100vh;overflow-x:hidden}
+body:before,body:after{content:"";position:fixed;border-radius:50%;filter:blur(60px);opacity:.25;z-index:-1}body:before{width:220px;height:220px;background:#6d4aa8;top:8%;right:8%}body:after{width:260px;height:260px;background:#4a2d72;bottom:5%;left:5%}
+.wrap{width:min(900px,92%);margin:auto;padding:35px 0}.screen{background:rgba(18,25,52,.82);border:1px solid rgba(255,255,255,.12);box-shadow:0 25px 70px rgba(0,0,0,.35);border-radius:30px;padding:34px;backdrop-filter:blur(12px)}
+.hidden{display:none}.logo{font-size:42px;font-weight:900;text-align:center;margin:10px 0;color:#f0d36b}.sub{text-align:center;color:#cbd5e1;font-size:18px;margin-bottom:30px}
+.btn{border:0;border-radius:16px;padding:15px 28px;font-size:19px;font-weight:800;cursor:pointer;color:#fff;background:#5b3a8c;box-shadow:0 10px 25px rgba(91,58,140,.28);transition:.2s}.btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.center{text-align:center}.sound{width:115px;height:115px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:#4b2b70;font-size:50px;cursor:pointer;box-shadow:0 0 35px rgba(91,58,140,.28);margin:12px}.sound:disabled{opacity:.45;cursor:not-allowed}
+.stats{display:flex;justify-content:space-between;gap:12px;margin-bottom:24px}.stat{background:rgba(255,255,255,.06);padding:12px 18px;border-radius:14px;flex:1;text-align:center;color:#dbeafe}.stat b{display:block;font-size:24px;color:#fff}
+.progress{height:10px;background:#0b1024;border-radius:99px;overflow:hidden;margin:18px 0 30px}.bar{height:100%;width:0;background:#6d4aa8;transition:.3s}
+.question{text-align:center;font-size:22px;margin:15px 0;color:#e2e8f0}.input{width:100%;padding:18px;border-radius:15px;border:1px solid rgba(255,255,255,.15);background:#0b1024;color:#fff;font-size:24px;text-align:center;outline:none}.input:focus{border-color:#d6b84f;box-shadow:0 0 0 3px rgba(214,184,79,.12)}
+.actions{text-align:center;margin-top:16px}.feedback{text-align:center;min-height:40px;margin:16px 0;font-size:21px;font-weight:800}.good{color:#67e8a5}.bad{color:#fda4af}.answer{font-size:25px;color:#f0d36b}
+.result-score{font-size:64px;font-weight:900;text-align:center;color:#f0d36b}.result-msg{text-align:center;font-size:28px;font-weight:900;margin:15px 0 30px}.list{margin:20px 0}.row{display:flex;justify-content:space-between;gap:12px;padding:13px 15px;margin:8px 0;border-radius:12px;background:rgba(255,255,255,.05)}.correct{color:#86efac}.wrong{color:#fda4af}
+.note{text-align:center;color:#94a3b8;margin-top:20px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="home" class="screen">
+  <div class="logo">🎮 تحدي الإملاء</div>
+  <div class="sub">اسمع الكلمة واكتب ما سمعته... عندك محاولتان لسماع كل كلمة 🔊</div>
+  <div class="voice-box" style="margin:0 auto 22px;max-width:560px;text-align:center;background:rgba(255,255,255,.05);border:1px solid rgba(91,58,140,.35);border-radius:18px;padding:16px;">
+    <label for="voiceSelect" style="display:block;font-weight:800;margin-bottom:9px;color:#f0d36b">🎙️ اختاري الصوت</label>
+    <select id="voiceSelect" style="width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#120d1d;color:#fff;font-size:16px;outline:none;">
+      <option>جاري تحميل الأصوات العربية...</option>
+    </select>
+  </div>
+  <div class="center"><button class="btn" id="start">ابدأ التحدي</button></div>
+  <div class="note">10 كلمات • درجة لكل إجابة صحيحة • لا يوجد نظام قلوب</div>
+</section>
+
+<section id="game" class="screen hidden">
+  <div class="stats">
+    <div class="stat">الكلمة <b id="num">1 / 10</b></div>
+    <div class="stat">الدرجة <b id="score">0</b></div>
+    <div class="stat">مرات الاستماع <b id="plays">0 / 2</b></div>
+  </div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div class="center">
+    <button class="sound" id="listen" title="اسمع الكلمة">🔊</button>
+    <div class="question">اسمع الكلمة ثم اكتبها في المربع</div>
+  </div>
+  <input class="input" id="answer" autocomplete="off" placeholder="اكتب الكلمة التي سمعتها">
+  <div class="feedback" id="feedback"></div>
+  <div class="actions"><button class="btn" id="submit">تأكيد الإجابة</button></div>
+</section>
+
+<section id="result" class="screen hidden">
+  <div class="logo">🏆 النتيجة النهائية</div>
+  <div class="result-score" id="finalScore">0 / 10</div>
+  <div class="result-msg" id="finalMsg"></div>
+  <div class="list" id="details"></div>
+  <div class="center"><button class="btn" id="again">إعادة التحدي</button></div>
+</section>
+</div>
+
+<script>
+const words=["لؤلؤ","فتى","مستشفى","عبء","متساءل","استئناف","مسؤولية","تفاؤل","مبتدئون","استثناء"];
+// نطق مخصص بدون تنوين أو حركة إعرابية في نهاية الكلمة
+const spokenWords=["لؤلؤْ","فَتَى","مُسْتَشْفَى","عِبْءْ","مُتَسَائِلْ","اِسْتِئْنَافْ","مَسْؤُولِيَّةْ","تَفَاؤُلْ","مُبْتَدِئُونْ","اِسْتِثْنَاءْ"];
+let i=0,score=0,plays=0,results=[];
+
+const $=id=>document.getElementById(id);
+function show(id){["home","game","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id));}
+let arabicVoice=null;
+function loadArabicVoices(){
+  if(!("speechSynthesis" in window)) return;
+  const voices=speechSynthesis.getVoices();
+  const ar=voices.filter(v=>/^ar/i.test(v.lang));
+  const select=$("voiceSelect");
+  const current=select.value;
+  select.innerHTML="";
+  if(!ar.length){
+    select.innerHTML='<option value="">لا يوجد صوت عربي ظاهر على الجهاز</option>';
+    return;
+  }
+  ar.forEach((v,idx)=>{
+    const o=document.createElement("option");
+    o.value=String(idx); o.textContent=`${v.name} — ${v.lang}`;
+    select.appendChild(o);
+  });
+  const preferred=ar.findIndex(v=>/^ar-EG/i.test(v.lang))>=0 ? ar.findIndex(v=>/^ar-EG/i.test(v.lang)) : 0;
+  select.value=current && Number(current)<ar.length ? current : String(preferred);
+}
+function getSelectedArabicVoice(){
+  const voices=speechSynthesis.getVoices().filter(v=>/^ar/i.test(v.lang));
+  const idx=Number($("voiceSelect").value);
+  return voices[idx] || voices.find(v=>/^ar-EG/i.test(v.lang)) || voices[0] || null;
+}
+if("speechSynthesis" in window){
+  loadArabicVoices();
+  speechSynthesis.onvoiceschanged=loadArabicVoices;
+}
+function speak(word, spokenWord=word){
+  if(!("speechSynthesis" in window)){alert("المتصفح لا يدعم تشغيل الصوت.");return;}
+  const voice=getSelectedArabicVoice();
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(word);
+  u.text=spokenWord.replace(/[ًٌٍ]/g,"");
+  u.lang=voice ? voice.lang : "ar-EG";
+  if(voice) u.voice=voice;
+  u.rate=.78;
+  u.pitch=1;
+  u.volume=1;
+  setTimeout(()=>speechSynthesis.speak(u),100);
+}
+function render(){
+  $("num").textContent=`${i+1} / ${words.length}`;
+  $("score").textContent=score;
+  $("plays").textContent=`${plays} / 2`;
+  $("bar").style.width=((i)/words.length*100)+"%";
+  $("answer").value=""; $("feedback").innerHTML="";
+  $("listen").disabled=plays>=2;
+  $("answer").focus();
+}
+$("start").onclick=()=>{i=0;score=0;plays=0;results=[];show("game");render()};
+$("listen").onclick=()=>{
+  if(plays<2){
+    plays++;
+    $("plays").textContent=`${plays} / 2`;
+    $("listen").disabled=plays>=2;
+    speak(words[i], spokenWords[i]);
+  }
+};
+$("submit").onclick=()=>{
+  const typed=$("answer").value.trim();
+  if(!typed){$("feedback").innerHTML='<span class="bad">اكتب الإجابة أولًا ✍️</span>';return}
+  const ok=typed===words[i];
+  if(ok){score++;$("feedback").innerHTML='<span class="good">✅ إجابة صحيحة!</span>'}
+  else {$("feedback").innerHTML=`<span class="bad">❌ الإجابة الصحيحة:</span> <span class="answer">${words[i]}</span>`}
+  results.push({word:words[i],typed,ok});
+  $("submit").disabled=true;$("listen").disabled=true;
+  setTimeout(()=>{i++;if(i<words.length){plays=0;$("submit").disabled=false;render()}else{finish()}},1300);
+};
+$("answer").addEventListener("keydown",e=>{if(e.key==="Enter")$("submit").click()});
+function finish(){
+  show("result");$("finalScore").textContent=`${score} / 10`;
+  let msg=score<=2?"😑😑 لا تعليق":score<=5?"ياسر طاهر فخور فيك":score<=8?"تحدي الإملاء يتصل 📞":"ممتاااااااز👏👏👏";
+  $("finalMsg").textContent=msg;
+  $("details").innerHTML=results.map((r,n)=>`<div class="row"><span>${n+1}. ${r.word}</span><span class="${r.ok?'correct':'wrong'}">${r.ok?'✓ صحيح':'✗ '+r.typed}</span></div>`).join("");
+}
+$("again").onclick=()=>{$("start").click()};
+</script>
+</body>
+</html>
